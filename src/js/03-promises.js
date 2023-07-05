@@ -1,3 +1,10 @@
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
+
+const formEl = document.querySelector('.form');
+let delayInp = null;
+let stepInp = null;
+let amountInp = null;
+
 function createPromise(position, delay) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -11,39 +18,30 @@ function createPromise(position, delay) {
   });
 }
 
-function createPromises(initialDelay, step, amount) {
-  let currentDelay = initialDelay;
+const submitHandler = e => {
+  e.preventDefault();
+  if (!e.target.tagName === 'BUTTON') return;
 
-  for (let i = 1; i <= amount; i++) {
-    createPromise(i, currentDelay)
+  const {
+    elements: { delay, step, amount },
+  } = e.currentTarget;
+
+  delayInp = Number(delay.value);
+  stepInp = Number(step.value);
+  amountInp = Number(amount.value);
+
+  for (let i = 1; i <= amountInp; i++) {
+    createPromise(i, delayInp)
       .then(({ position, delay }) => {
-        displayResult(`✅ Fulfilled promise ${position} in ${delay}ms`);
+        Notify.success(`✅ Fulfilled promise ${position} in ${delay}ms`);
       })
       .catch(({ position, delay }) => {
-        displayResult(`❌ Rejected promise ${position} in ${delay}ms`);
+        Notify.failure(`❌ Rejected promise ${position} in ${delay}ms`);
       });
 
-    currentDelay += step;
+    delayInp += stepInp;
   }
-}
 
-function displayResult(message) {
-  const resultElement = document.getElementById('result');
-  const messageElement = document.createElement('p');
-  messageElement.textContent = message;
-  resultElement.appendChild(messageElement);
-}
-
-document.querySelector('.form').addEventListener('submit', function (e) {
-  e.preventDefault();
-
-  const delayInput = document.querySelector('input[name="delay"]');
-  const stepInput = document.querySelector('input[name="step"]');
-  const amountInput = document.querySelector('input[name="amount"]');
-
-  const initialDelay = parseInt(delayInput.value);
-  const step = parseInt(stepInput.value);
-  const amount = parseInt(amountInput.value);
-
-  createPromises(initialDelay, step, amount);
-});
+  e.currentTarget.reset();
+};
+formEl.addEventListener('submit', submitHandler);
